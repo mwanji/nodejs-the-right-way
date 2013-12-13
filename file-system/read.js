@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 const fs = require('fs'),
        stream = fs.createReadStream(process.argv[2]);
