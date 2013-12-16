@@ -13,6 +13,7 @@ const
       let boundary = buffer.indexOf('\n');
       if (boundary !== -1) {
         self.emit('message', JSON.parse(buffer));
+        buffer = '';
       }
     });
   };
