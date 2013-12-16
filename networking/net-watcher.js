@@ -10,10 +10,17 @@ if (!filename) {
 
 const server = net.createServer(function (connection) {
   console.log('Subscriber connected');
-  connection.write('Watching ' + filename + ' for changes...\n');
+  connection.write(JSON.stringify({
+    type: 'watching',
+    file: filename
+  }) + '\n');
   
   const watcher = fs.watch(filename, function () {
-    connection.write(filename + ' changed at ' + new Date().toString() + '\n');
+    connection.write(JSON.stringify({
+      type: 'changed',
+      file: filename,
+      timestamp: Date.now()
+    }) + '\n');
   });
   
   connection.on('close', function () {
