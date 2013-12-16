@@ -2,15 +2,18 @@
 
 const
   net = require('net'),
-  client = require('./Ldj.js').connect(net.connect({ port: 8000 }));
+  client = require('./Ldj.js').connect(net.connect({ port: 8000 })),
+  reader = require('./MessageReader.js').MessageReader();
+  
+reader.on('watching', function (file) {
+  console.log('Now watching file: ' + file);
+});
+
+reader.on('changed', function (message) {
+  let date = new Date(message.timestamp);
+  console.log(message.file + " @ " + date);
+});
   
 client.on('message', function (message) {
-  if (message.type === 'watching') {
-    console.log('Now watching file: ' + message.file);
-  } else if (message.type === 'changed') {
-    let date = new Date(message.timestamp);
-    console.log(message.file + " @ " + date);
-  } else {
-    throw Error('Unknown message type: ' + message.type);
-  }
+  reader.readMessage(message);
 });
