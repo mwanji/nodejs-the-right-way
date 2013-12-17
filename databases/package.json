@@ -1,0 +1,16 @@
+{
+  "name": "book-tools",
+  "version": "1.0.0",
+  "description": "Tools to create an ebook database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Moandji Ezana <mwanji@gmail.com> (http://moandjiezana.com)",
+  "license": "MIT",
+  "dependencies": {
+    "redis": "~0.9.2",
+    "cheerio": "~0.12.4",
+    "file": "~0.2.1"
+  }
+}
