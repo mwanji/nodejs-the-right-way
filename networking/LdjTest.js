@@ -3,6 +3,7 @@
 let callback;
 
 const
+  assert = require('assert'),
   Ldj = require('./Ldj.js'),
   stream = {
     on: function (type, fn) {
@@ -19,7 +20,6 @@ client.on('message', function (message) {
 callback('{"key":1}\n');
 callback('{"key":2}\n');
 
-if (responses[0].key !== 1 || responses[1].key !== 2) {
-  console.error('FAILURE: \n' + responses[0] + '\n' + responses[1]);
-}
+assert.equal(responses[0].key, 1);
+assert.equal(responses[1].key, 2);
 

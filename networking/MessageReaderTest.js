@@ -1,6 +1,8 @@
 'use strict';
 
-const messageReader = require('./MessageReader').MessageReader();
+const
+  messageReader = require('./MessageReader').MessageReader(),
+  assert = require('assert');
 
 let fileName, messageFile, messageTimestamp, expectedTimestamp;
 
@@ -18,19 +20,15 @@ messageReader.readMessage({
   file: 'abc.txt'
 });
 
-if (fileName !== 'abc.txt') {
-  throw Error('Watching event handler not called!');
-}
+assert.equal(fileName, 'abc.txt', 'Watching event handler not called!');
 
 expectedTimestamp = new Date(2013, 11, 16, 11, 4, 0, 0).getTime();
-
 messageReader.readMessage({
   type: 'changed',
   file: 'def.txt',
   timestamp: expectedTimestamp
 });
 
-if (messageFile !== 'def.txt' || messageTimestamp !== expectedTimestamp) {
-  throw Error('Changed event handler not called!');
-}
+assert.equal(messageFile, 'def.txt', 'Changed event handler not called!');
+assert.equal(messageTimestamp, expectedTimestamp, 'Changed event handler not called!');
 
