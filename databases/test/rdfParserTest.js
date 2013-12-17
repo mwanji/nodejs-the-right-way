@@ -5,6 +5,10 @@ const
   rdfParser = require('../rdfParser.js'),
   expectedRdf = require('./pg132.json');
   
-rdfParser(132, function (book) {
+rdfParser(132, function (err, book) {
   assert.deepEqual(book, expectedRdf, 'Books should match!');
+});
+
+rdfParser(' ', function (err, book) {
+  assert(err, 'Error should be returned to callback!');
 });
