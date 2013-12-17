@@ -8,6 +8,11 @@ const queue = async.queue(function (rdfFileId, callback) {
   rdfParser(rdfFileId, function (err, rdf) {
     console.log('Save Book ID=' + rdf._id);
     db.set('books:' + rdf._id, JSON.stringify(rdf));
+    
+    rdf.authors.forEach(function (author) {
+      db.sadd('books:lookup:author:' + author, rdf._id);
+    });
+    
     callback();
   });
 }, 10);
