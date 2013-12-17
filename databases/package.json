@@ -11,6 +11,7 @@
   "dependencies": {
     "redis": "~0.9.2",
     "cheerio": "~0.12.4",
-    "file": "~0.2.1"
+    "file": "~0.2.1",
+    "async": "~0.2.9"
   }
 }
