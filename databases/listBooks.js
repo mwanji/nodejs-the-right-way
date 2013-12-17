@@ -1,7 +1,8 @@
 const
   file = require('file'),
   async = require('async'),
-  db = require('redis').createClient(),
+  redis = require('redis'),
+  db = redis.createClient(),
   rdfParser = require('./rdfParser');
   
 const queue = async.queue(function (rdfFileId, callback) {
@@ -11,6 +12,15 @@ const queue = async.queue(function (rdfFileId, callback) {
     
     rdf.authors.forEach(function (author) {
       db.sadd('books:lookup:author:' + author, rdf._id);
+    });
+    
+    rdf.subjects.forEach(function (subject) {
+      db.sadd('books:lookup:subject:' + subject, rdf._id, function (err, reply) {
+        console.log(err, reply);
+      });
+      subject.split(/\s+--\s+/).forEach(function (part) {
+        db.sadd('books:lookup:subject:' + part, rdf._id);
+      });
     });
     
     callback();
