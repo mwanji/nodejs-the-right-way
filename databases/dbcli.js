@@ -2,74 +2,118 @@
 
 const
   redis = require('redis'),
+  async = require('async'),
   db = redis.createClient(),
   rdfParser = require('./rdfParser.js'),
   query = JSON.parse(process.argv[2]);
   
-const idToKeys = function (bookId) {
+const idToKey = function (bookId) {
   return 'books:' + bookId;
 };
 
-const close = (function (countdown) {
-  return function (fn) {
-    return function () {
-      try {
-        fn.apply(null, arguments);
-      } finally {
-        countdown--;
-        if (countdown === 0) {
-          db.quit();
-        }
-      }
-    }
+const schema = {
+  book: function (id) {
+    return 'books:' + id;
+  },
+  lookup: function (id) {
+    return this.book('lookup:' + id);
+  }
+}
+
+const getById = function (id) {
+  return function (callback) {
+    db.get(schema.book(id), function (err, result) {
+      callback(null, {
+        key: schema.book(id),
+        result: result
+      });
+    });
   };
-})(Object.keys(query).length);
+};
 
+const getByAuthor = function (author) {
+  return function (callback) {
+    db.smembers(schema.lookup('author:' + author), function (err, bookIds) {
+      if (err) {
+        callback(err, null);
+        return;
+      }
+      
+      db.mget(bookIds.map(idToKey), function (err, books) {
+        if (err) {
+          callback(err, null);
+          return;
+        }
+        
+        const titles = books.map(function (book) {
+          return JSON.parse(book).title;
+        }).reduce(function (reduced, title) {
+          return reduced + title + '\n';
+        }, '');
+        
+        callback(err, {
+          key: schema.lookup('author:' + author),
+          result: titles
+        });
+      });
+    });
+  }
+};
+
+const getBySubject = function (subject) {
+  return function (callback) {
+    db.smembers(schema.lookup('subject:' + subject), function (err, bookIds) {
+      if (err) {
+        callback(err);
+        return;
+      }
+      
+      db.mget(bookIds.map(idToKey), function (err, books) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        
+        const titles = books.map(function (book) {
+          const json = JSON.parse(book);
+          return json.title + ' by ' + json.authors;
+        }).reduce(function (reduced, title) {
+          return reduced + title + '\n';
+        }, '');
+        
+        callback(err, {
+          key: schema.lookup('subject:' + subject),
+          result: titles
+        });
+      });
+    });
+  };
+};
+
+const parallelTasks = [];
 if (query.id) {
-  db.get('books:' + query.id, close(function (err, result) {
-    console.log(result);
-  }));
-}
-
+  parallelTasks.push(getById(query.id));
+};
 if (query.author) {
-  db.smembers('books:lookup:author:' + query.author, close(function (err, bookIds) {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    
-    console.log(bookIds);
-    
-    db.mget(bookIds.map(idToKeys), function (err, books) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      
-      books.forEach(function (book) {
-        console.log(JSON.parse(book).title);
-      });
-    });
-  }));
+  parallelTasks.push(getByAuthor(query.author));
+}
+if (query.subject) {
+  parallelTasks.push(getBySubject(query.subject));
 }
 
-if (query.subject) {
-  db.smembers('books:lookup:subject:' + query.subject, close(function (err, bookIds) {
+async.parallel(parallelTasks,
+  function (err, results) {
     if (err) {
       console.log(err);
       return;
     }
     
-    db.mget(bookIds.map(idToKeys), function (err, books) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      
-      books.forEach(function (book) {
-        console.log(JSON.parse(book).title);
-      });
+    results.forEach(function (result) {
+      console.log(result.key);
+      console.log(result.result);
     });
-  }));
-}
+    
+    db.quit();
+  }
+);
 
