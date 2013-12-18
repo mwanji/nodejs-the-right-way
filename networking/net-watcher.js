@@ -31,9 +31,9 @@ const server = net.createServer(function (connection) {
   });
 });
 
-process.on('SIGINT', function () {
+process.on('exit', function () {
   watcher.close();
-  console.log('close event handler called');
+  console.log('Closed watcher');
 });
 
 server.listen(8000, function () {
